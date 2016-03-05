@@ -2,6 +2,9 @@
 {
   using System;
   using System.Linq;
+#if ASYNC
+  using System.Threading.Tasks;
+#endif
 
   /// <summary>
   /// A TcpClient to connect to the specified socket.
@@ -31,7 +34,7 @@
       {
         if (this.client == null)
         {
-          this.client = new System.Net.Sockets.TcpClient(hostname, port);
+          this.client = new System.Net.Sockets.TcpClient();
         }
         return this.client;
       }
@@ -70,6 +73,24 @@
         return this.Client.Connected;
       }
     }
+
+#if ASYNC
+    /// <summary>
+    /// Connects this instance.
+    /// </summary>
+    public async Task ConnectAsync()
+    {
+      await this.Client.ConnectAsync(this.hostname, this.port);
+    }
+#else
+    /// <summary>
+    /// Connects this instance to the specified port on the specified host.
+    /// </summary>
+    public void Connect()
+    {
+      this.Client.Connect(this.hostname, this.port);
+    }
+#endif
 
     /// <summary>
     /// Gets the available bytes to be read.
@@ -110,6 +131,15 @@
     /// </returns>
     public INetworkStream GetStream()
     {
+      if (!this.Client.Connected)
+      {
+#if ASYNC
+        this.ConnectAsync().Wait();
+#else
+        this.Connect();
+#endif
+      }
+
       return new NetworkStream(this.Client.GetStream());
     }
 

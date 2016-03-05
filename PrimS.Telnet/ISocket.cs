@@ -2,6 +2,9 @@
 {
   using System;
   using System.Linq;
+#if ASYNC
+  using System.Threading.Tasks;
+#endif 
 
   /// <summary>
   /// A socket to connect to.
@@ -37,6 +40,18 @@
     /// </summary>
     /// <returns>Network stream socket connected to.</returns>
     INetworkStream GetStream();
+
+#if ASYNC
+    /// <summary>
+    /// Connects this instance.
+    /// </summary>
+    Task ConnectAsync();
+#else
+    /// <summary>
+    /// Connects this instance.
+    /// </summary>
+    void Connect();
+#endif
 
     /// <summary>
     /// Closes this instance.

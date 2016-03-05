@@ -20,7 +20,7 @@
     public static void ClassInitialize(TestContext ctx)
     {
       byteStream = A.Fake<IByteStream>();
-      A.CallTo(() => byteStream.Connected).Returns(true);
+      A.CallTo(() => byteStream.IsConnected).Returns(true);
 
       sut = new Client(byteStream, default(CancellationToken), new TimeSpan(0, 0, 0, 0, 1));
     }

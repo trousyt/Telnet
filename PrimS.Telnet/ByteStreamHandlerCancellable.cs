@@ -40,7 +40,7 @@
     public string Read(TimeSpan timeout)
 #endif
     {
-      if (!this.byteStream.Connected || this.internalCancellation.Token.IsCancellationRequested)
+      if (!this.byteStream.IsConnected || this.internalCancellation.Token.IsCancellationRequested)
       {
         return string.Empty;
       }

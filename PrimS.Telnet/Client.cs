@@ -7,11 +7,10 @@ namespace PrimS.Telnet
   using LiteGuard;
 
   // Referencing https://support.microsoft.com/kb/231866?wa=wsignin1.0 and http://www.codeproject.com/Articles/19071/Quick-tool-A-minimalistic-Telnet-library got me started
-
   /// <summary>
   /// Basic Telnet client.
   /// </summary>
-  public class Client : BaseClient
+  public class Client : BaseClient, IClient
   {
     private readonly TimeSpan timeout;
     private readonly ConnectionMode connectionMode;
@@ -35,7 +34,20 @@ namespace PrimS.Telnet
     /// <param name="token">The cancellation token.</param>
     /// <param name="connectionMode">Mode for creation of the connection.</param>
     public Client(string hostname, int port, CancellationToken token, ConnectionMode connectionMode)
-      : this(new TcpByteStream(hostname, port), token, new TimeSpan(0, 0, 30), connectionMode)
+      : this(new TcpByteStream(hostname, port), token, new TimeSpan(0, 0, 15), connectionMode)
+    {
+    }
+
+    /// <summary>
+    /// Initialises a new instance of the <see cref="Client"/> class.
+    /// </summary>
+    /// <param name="hostname">The hostname to connect to.</param>
+    /// <param name="port">The port to connect to.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <param name="timeout">The timeout to wait for initial successful connection to <cref>byteStream</cref>.</param>
+    /// <param name="connectionMode">Mode for creation of the connection.</param>
+    public Client(string hostname, int port, CancellationToken token, TimeSpan timeout, ConnectionMode connectionMode)
+      : this(new TcpByteStream(hostname, port), token, timeout, connectionMode)
     {
     }
 
@@ -64,7 +76,7 @@ namespace PrimS.Telnet
       this.connectionMode = connectionMode;
       if (connectionMode == ConnectionMode.OnInitialise)
       {
-        this.Connect().Wait();
+        this.ConnectAsync().Wait();
       }
     }
 
@@ -73,28 +85,12 @@ namespace PrimS.Telnet
     {
     }
 
-    private async Task Connect()
-    {
-      DateTime timeoutEnd = DateTime.Now.Add(this.timeout);
-      AutoResetEvent are = new AutoResetEvent(false);
-      while (!this.ByteStream.Connected && timeoutEnd > DateTime.Now)
-      {
-        await Task.Delay(1);
-        are.WaitOne(1);
-      }
-
-      if (!this.ByteStream.Connected)
-      {
-        throw new InvalidOperationException("Unable to connect to the host.");
-      }
-    }
-
     /// <summary>
     /// Tries to login asynchronously.
     /// </summary>
     /// <param name="username">The username.</param>
     /// <param name="password">The password.</param>
-    /// <param name="loginTimeOutMs">The login time out ms.</param>
+    /// <param name="loginTimeOutMs">The login time out in milliseconds.</param>
     /// <returns>True if successful.</returns>
     public async Task<bool> TryLoginAsync(string username, string password, int loginTimeOutMs)
     {
@@ -136,11 +132,12 @@ namespace PrimS.Telnet
     /// <returns>Any text read from the stream.</returns>
     public async Task Write(string command)
     {
-      if (this.connectionMode == ConnectionMode.OnDemand)
+      if (this.connectionMode == ConnectionMode.OnDemand && !this.ByteStream.IsConnected)
       {
-        await this.Connect();
+        await this.ConnectAsync();
       }
-      if (this.ByteStream.Connected && !this.InternalCancellation.Token.IsCancellationRequested)
+
+      if (this.ByteStream.IsConnected && !this.InternalCancellation.Token.IsCancellationRequested)
       {
         await this.SendRateLimit.WaitAsync(this.InternalCancellation.Token);
         await this.ByteStream.WriteAsync(command, this.InternalCancellation.Token);
@@ -244,12 +241,35 @@ namespace PrimS.Telnet
     /// <returns>Any text read from the stream.</returns>
     public async Task<string> ReadAsync(TimeSpan timeout)
     {
-      if (this.connectionMode == ConnectionMode.OnDemand)
+      if (this.connectionMode == ConnectionMode.OnDemand && !this.ByteStream.IsConnected)
       {
-        await this.Connect();
+        await this.ConnectAsync();
       }
-      ByteStreamHandler handler = new ByteStreamHandler(this.ByteStream, this.InternalCancellation);
+
+      var handler = new ByteStreamHandler(this.ByteStream, this.InternalCancellation);
       return await handler.ReadAsync(timeout);
+    }
+
+    /// <summary>
+    /// Connects this instance.
+    /// </summary>
+    /// <returns>An awaitable task.</returns>
+    /// <exception cref="System.InvalidOperationException">Unable to connect to the host.</exception>
+    public async Task ConnectAsync()
+    {
+      DateTime timeoutEnd = DateTime.Now.Add(this.timeout);
+      var are = new AutoResetEvent(false);
+      await this.ByteStream.ConnectAsync();
+      while (!this.ByteStream.IsConnected && timeoutEnd > DateTime.Now)
+      {
+        await Task.Delay(1);
+        are.WaitOne(1);
+      }
+
+      if (!this.ByteStream.IsConnected)
+      {
+        throw new InvalidOperationException("Unable to connect to the host.");
+      }
     }
 
     private async Task<bool> IsTerminatedWith(int loginTimeOutMs, string terminator)

@@ -55,7 +55,7 @@ namespace PrimS.Telnet
     /// <value>
     ///   <c>True</c> if connected; otherwise, <c>false</c>.
     /// </value>
-    public bool Connected
+    public bool IsConnected
     {
       get
       {
@@ -90,7 +90,20 @@ namespace PrimS.Telnet
     /// </returns>
     public int ReadByte()
     {
-      return this.socket.GetStream().ReadByte();
+      return this.GetStream().ReadByte();
+    }
+
+    private INetworkStream GetStream()
+    {
+      if (!this.IsConnected)
+      {
+#if ASYNC
+        this.ConnectAsync().Wait();
+#else
+        this.Connect();
+#endif
+      }
+      return this.socket.GetStream();
     }
 
     /// <summary>
@@ -99,7 +112,7 @@ namespace PrimS.Telnet
     /// <param name="value">The byte to write to the stream.</param>
     public void WriteByte(byte value)
     {
-      this.socket.GetStream().WriteByte(value);
+      this.GetStream().WriteByte(value);
     }
 
 #if ASYNC
@@ -113,11 +126,11 @@ namespace PrimS.Telnet
     /// <returns>
     /// A task that represents the asynchronous write operation.
     /// </returns>
-    public Task WriteAsync(byte[] buffer, int offset, int count, System.Threading.CancellationToken cancellationToken)
+    public async Task WriteAsync(byte[] buffer, int offset, int count, System.Threading.CancellationToken cancellationToken)
     {
-      return this.socket.GetStream().WriteAsync(buffer, offset, count, cancellationToken);
+      await this.GetStream().WriteAsync(buffer, offset, count, cancellationToken);
     }
-#else    
+#else
     /// <summary>
     /// Writes the specified buffer.
     /// </summary>
@@ -126,7 +139,7 @@ namespace PrimS.Telnet
     /// <param name="count">The count.</param>
     public void Write(byte[] buffer, int offset, int count)
     {
-      this.socket.GetStream().Write(buffer, offset, count);
+      this.GetStream().Write(buffer, offset, count);
     }
 #endif
 
@@ -140,17 +153,17 @@ namespace PrimS.Telnet
     public Task WriteAsync(string command, System.Threading.CancellationToken cancellationToken)
     {
       byte[] buffer = ConvertStringToByteArray(command);
-      return this.socket.GetStream().WriteAsync(buffer, 0, buffer.Length, cancellationToken);
+      return this.GetStream().WriteAsync(buffer, 0, buffer.Length, cancellationToken);
     }
-#else    
+#else
     /// <summary>
     /// Writes the specified command to the stream.
     /// </summary>
     /// <param name="command">The command.</param>
     public void Write(string command)
-    {        
+    {
       byte[] buffer = ConvertStringToByteArray(command);
-      this.socket.GetStream().Write(buffer, 0, buffer.Length);
+      this.GetStream().Write(buffer, 0, buffer.Length);
     }
 #endif
 
@@ -161,6 +174,24 @@ namespace PrimS.Telnet
     {
       this.socket.Close();
     }
+
+#if ASYNC
+    /// <summary>
+    /// Explicitly connect this instance.
+    /// </summary>
+    public async Task ConnectAsync()
+    {
+      await this.socket.ConnectAsync();
+    }
+#else
+    /// <summary>
+    /// Explicitly connect this instance.
+    /// </summary>
+    public void Connect()
+    {
+      this.socket.Connect();
+    }
+#endif
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

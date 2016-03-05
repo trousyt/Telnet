@@ -35,7 +35,7 @@
     public string Read(TimeSpan timeout)
 #endif
     {
-      if (!this.byteStream.Connected)
+      if (!this.byteStream.IsConnected)
       {
         return string.Empty;
       }

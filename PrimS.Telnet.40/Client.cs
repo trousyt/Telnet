@@ -55,7 +55,12 @@ namespace PrimS.Telnet
     /// <param name="command">The command.</param>
     public void Write(string command)
     {
-      if (this.ByteStream.Connected)
+      if (this.connectionMode == ConnectionMode.OnDemand && !this.ByteStream.IsConnected)
+      {
+        this.Connect();
+      }
+
+      if (this.ByteStream.IsConnected)
       {
         this.ByteStream.Write(command);
       }

@@ -28,7 +28,7 @@ namespace PrimS.Telnet
     {
       get
       {
-        return this.ByteStream.Connected;
+        return this.ByteStream.IsConnected;
       }
     }
 

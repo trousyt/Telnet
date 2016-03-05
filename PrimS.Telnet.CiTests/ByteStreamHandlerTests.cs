@@ -10,6 +10,7 @@
   using FakeItEasy;
   using FluentAssertions;
   using Microsoft.VisualStudio.TestTools.UnitTesting;
+  using System.Text;
 
   [ExcludeFromCodeCoverage]
   [TestClass]
@@ -53,7 +54,7 @@
       });
       TcpByteStream tcpByteStream = new TcpByteStream(socket);
       A.CallTo(() => networkStream.ReadByte()).ReturnsNextFromSequence(-1);
-      tcpByteStream.Connected.Should().BeTrue();
+      tcpByteStream.IsConnected.Should().BeTrue();
       ByteStreamHandler sut = new ByteStreamHandler(tcpByteStream, new CancellationTokenSource());
 
 #if ASYNC
@@ -88,7 +89,7 @@
       });
       TcpByteStream tcpByteStream = new TcpByteStream(socket);
       A.CallTo(() => networkStream.ReadByte()).ReturnsNextFromSequence(65);
-      tcpByteStream.Connected.Should().BeTrue();
+      tcpByteStream.IsConnected.Should().BeTrue();
       ByteStreamHandler sut = new ByteStreamHandler(tcpByteStream, new CancellationTokenSource());
 
 #if ASYNC
@@ -123,7 +124,7 @@
       });
       TcpByteStream tcpByteStream = new TcpByteStream(socket);
       A.CallTo(() => networkStream.ReadByte()).ReturnsNextFromSequence(new int[] { (int)Commands.InterpretAsCommand, (int)Commands.InterpretAsCommand });
-      tcpByteStream.Connected.Should().BeTrue();
+      tcpByteStream.IsConnected.Should().BeTrue();
       ByteStreamHandler sut = new ByteStreamHandler(tcpByteStream, new CancellationTokenSource());
 
 #if ASYNC
@@ -157,7 +158,7 @@
       });
       TcpByteStream tcpByteStream = new TcpByteStream(socket);
       A.CallTo(() => networkStream.ReadByte()).ReturnsNextFromSequence(new int[] { (int)Commands.InterpretAsCommand, -1 });
-      tcpByteStream.Connected.Should().BeTrue();
+      tcpByteStream.IsConnected.Should().BeTrue();
       ByteStreamHandler sut = new ByteStreamHandler(tcpByteStream, new CancellationTokenSource());
 
 #if ASYNC
@@ -192,7 +193,7 @@
       });
       TcpByteStream tcpByteStream = new TcpByteStream(socket);
       A.CallTo(() => networkStream.ReadByte()).ReturnsNextFromSequence(new int[] { (int)Commands.InterpretAsCommand, (int)Commands.Do, (int)Options.SuppressGoAhead });
-      tcpByteStream.Connected.Should().BeTrue();
+      tcpByteStream.IsConnected.Should().BeTrue();
       ByteStreamHandler sut = new ByteStreamHandler(tcpByteStream, new CancellationTokenSource());
 
 #if ASYNC
@@ -228,7 +229,7 @@
       });
       TcpByteStream tcpByteStream = new TcpByteStream(socket);
       A.CallTo(() => networkStream.ReadByte()).ReturnsNextFromSequence(new int[] { (int)Commands.InterpretAsCommand, (int)Commands.Do, 1 });
-      tcpByteStream.Connected.Should().BeTrue();
+      tcpByteStream.IsConnected.Should().BeTrue();
       ByteStreamHandler sut = new ByteStreamHandler(tcpByteStream, new CancellationTokenSource());
 
 #if ASYNC
@@ -265,7 +266,8 @@
       });
       TcpByteStream tcpByteStream = new TcpByteStream(socket);
       A.CallTo(() => networkStream.ReadByte()).ReturnsNextFromSequence(new int[] { (int)Commands.InterpretAsCommand, 2 });
-      tcpByteStream.Connected.Should().BeTrue();
+      tcpByteStream.IsConnected.Should().BeTrue();
+      A.CallTo(() => networkStream.WriteByte((byte)Commands.NoOperation)).MustNotHaveHappened();
       ByteStreamHandler sut = new ByteStreamHandler(tcpByteStream, new CancellationTokenSource());
 
 #if ASYNC
@@ -301,7 +303,7 @@
       });
       TcpByteStream tcpByteStream = new TcpByteStream(socket);
       A.CallTo(() => networkStream.ReadByte()).ReturnsNextFromSequence(new int[] { (int)Commands.InterpretAsCommand, (int)Commands.Dont, 1 });
-      tcpByteStream.Connected.Should().BeTrue();
+      tcpByteStream.IsConnected.Should().BeTrue();
       ByteStreamHandler sut = new ByteStreamHandler(tcpByteStream, new CancellationTokenSource());
 
 #if ASYNC
@@ -338,7 +340,7 @@
       });
       TcpByteStream tcpByteStream = new TcpByteStream(socket);
       A.CallTo(() => networkStream.ReadByte()).ReturnsNextFromSequence(new int[] { (int)Commands.InterpretAsCommand, (int)Commands.Dont, (int)Options.SuppressGoAhead });
-      tcpByteStream.Connected.Should().BeTrue();
+      tcpByteStream.IsConnected.Should().BeTrue();
       ByteStreamHandler sut = new ByteStreamHandler(tcpByteStream, new CancellationTokenSource());
 
 #if ASYNC
@@ -366,7 +368,7 @@
       A.CallTo(() => socket.Available).Returns(1);
       TcpByteStream tcpByteStream = new TcpByteStream(socket);
       A.CallTo(() => networkStream.ReadByte()).Returns(142);
-      tcpByteStream.Connected.Should().BeTrue();
+      tcpByteStream.IsConnected.Should().BeTrue();
       CancellationTokenSource cancellationToken = new CancellationTokenSource();
 
       Stopwatch stopwatch = new Stopwatch();

@@ -15,7 +15,7 @@ namespace PrimS.Telnet.CiTests
     public void ShouldFailOnCtorWhenConnectionModeOnInitialiseByDefault()
     {
       IByteStream byteStream = A.Fake<IByteStream>();
-      A.CallTo(() => byteStream.Connected).Returns(false);
+      A.CallTo(() => byteStream.IsConnected).Returns(false);
       Client sut = null;
       Action act = () => sut = new Client(byteStream, default(CancellationToken), new TimeSpan(0, 0, 0, 0, 1));
 
@@ -27,7 +27,7 @@ namespace PrimS.Telnet.CiTests
     public void ShouldFailOnCtorWhenConnectionModeOnInitialise()
     {
       IByteStream byteStream = A.Fake<IByteStream>();
-      A.CallTo(() => byteStream.Connected).Returns(false);
+      A.CallTo(() => byteStream.IsConnected).Returns(false);
       Client sut = null;
       Action act = () => sut = new Client(byteStream, default(CancellationToken), new TimeSpan(0, 0, 0, 0, 1), ConnectionMode.OnInitialise);
 
@@ -39,7 +39,7 @@ namespace PrimS.Telnet.CiTests
     public void ShouldNotFailOnCtorWhenConnectionModeOnDemand()
     {
       IByteStream byteStream = A.Fake<IByteStream>();
-      A.CallTo(() => byteStream.Connected).Returns(false);
+      A.CallTo(() => byteStream.IsConnected).Returns(false);
       Client sut = null;
       Action act = () => sut = new Client(byteStream, default(CancellationToken), new TimeSpan(0, 0, 0, 0, 1), ConnectionMode.OnDemand);
 
@@ -51,7 +51,7 @@ namespace PrimS.Telnet.CiTests
     public void ShouldTimeoutOnFirstRead()
     {
       IByteStream byteStream = A.Fake<IByteStream>();
-      A.CallTo(() => byteStream.Connected).Returns(false);
+      A.CallTo(() => byteStream.IsConnected).Returns(false);
       Client sut = new Client(byteStream, default(CancellationToken), new TimeSpan(0, 0, 0, 0, 1), ConnectionMode.OnDemand);
 
       Action act = () => sut.ReadAsync().Wait();
@@ -63,7 +63,7 @@ namespace PrimS.Telnet.CiTests
     public void ShouldTimeoutOnFirstWrite()
     {
       IByteStream byteStream = A.Fake<IByteStream>();
-      A.CallTo(() => byteStream.Connected).Returns(false);
+      A.CallTo(() => byteStream.IsConnected).Returns(false);
       Client sut = new Client(byteStream, default(CancellationToken), new TimeSpan(0, 0, 0, 0, 1), ConnectionMode.OnDemand);
 
       Action act = () => sut.Write("A").Wait();

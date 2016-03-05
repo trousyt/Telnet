@@ -20,15 +20,15 @@
     /// <exception cref="System.Net.Sockets.SocketException">An error occurred when attempting to access the socket. See the Remarks section for more information.</exception>
     /// <exception cref="System.ObjectDisposedException">The System.Net.Sockets.Socket has been closed.</exception>
     int Available { get; }
-    
+
     /// <summary>
     /// Gets a value indicating whether this <see cref="IByteStream"/> is connected.
     /// </summary>
     /// <value>
     ///   <c>True</c> if connected; otherwise, <c>false</c>.
     /// </value>
-    bool Connected { get; }
-    
+    bool IsConnected { get; }
+
     /// <summary>
     /// Gets or sets the amount of time this <see cref="IByteStream"/> will wait to receive data once a read operation is initiated.
     /// </summary>
@@ -41,6 +41,18 @@
     /// Disposes the instance and requests that the underlying connection be closed.
     /// </summary>
     void Close();
+
+#if ASYNC
+    /// <summary>
+    /// Explicitly connect this instance.
+    /// </summary>
+    Task ConnectAsync();
+#else
+    /// <summary>
+    /// Explicitly connect this instance.
+    /// </summary>
+    void Connect();
+#endif
 
     /// <summary>
     /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
