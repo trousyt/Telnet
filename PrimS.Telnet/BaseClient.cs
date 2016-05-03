@@ -17,6 +17,17 @@ namespace PrimS.Telnet
     /// The byte stream.
     /// </summary>
     protected readonly IByteStream ByteStream;
+
+    private string loginTerminators = ">";
+    
+    /// <summary>
+    /// The terminators that will determine a successful login.
+    /// </summary>
+    public string LoginTerminators
+    {
+      get { return this.loginTerminators; }
+      set { this.loginTerminators = value; }
+    }
     
     /// <summary>
     /// Gets a value indicating whether this instance is connected.

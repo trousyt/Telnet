@@ -134,6 +134,20 @@
       }
     }
 
+    [TestMethod, Timeout(3000)]
+    public async Task ShouldLoginWithEnableHashChar()
+    {
+      using (TelnetServer server = new TelnetServer("#"))
+      {
+        using (Client client = new Client(server.IPAddress.ToString(), server.Port, new System.Threading.CancellationToken()))
+        {
+          client.IsConnected.Should().Be(true);
+          client.LoginTerminators = "#";
+          (await client.TryLoginAsync("username", "password", TimeoutMs)).Should().Be(true);
+        }
+      }
+    }
+
     [TestMethod]
     public async Task ReadmeExample()
     {

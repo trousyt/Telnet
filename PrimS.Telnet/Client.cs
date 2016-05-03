@@ -34,13 +34,13 @@ namespace PrimS.Telnet
     {
     }
 
-    /// <summary>
-    /// Initialises a new instance of the <see cref="Client"/> class.
-    /// </summary>
-    /// <param name="byteStream">The stream served by the host connected to.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <param name="timeout">The timeout to wait for initial successful connection to <cref>byteStream</cref>.</param>
-    public Client(IByteStream byteStream, CancellationToken token, TimeSpan timeout)
+      /// <summary>
+      /// Initialises a new instance of the <see cref="Client"/> class.
+      /// </summary>
+      /// <param name="byteStream">The stream served by the host connected to.</param>
+      /// <param name="token">The cancellation token.</param>
+      /// <param name="timeout">The timeout to wait for initial successful connection to <cref>byteStream</cref>.</param>
+      public Client(IByteStream byteStream, CancellationToken token, TimeSpan timeout)
       : base(byteStream, token)
     {
       Guard.AgainstNullArgument("byteStream", byteStream);
@@ -77,7 +77,8 @@ namespace PrimS.Telnet
             await this.WriteLine(password);
           }
 
-          return await this.IsTerminatedWith(loginTimeOutMs, ">");
+          var loginRegex = new Regex(string.Format(".*[{0}]$", LoginTerminators));
+          return await this.IsTerminatedWith(loginTimeOutMs, loginRegex);
         }
       }
       catch (Exception)
@@ -215,7 +216,13 @@ namespace PrimS.Telnet
 
     private async Task<bool> IsTerminatedWith(int loginTimeOutMs, string terminator)
     {
-      return (await this.TerminatedReadAsync(terminator, TimeSpan.FromMilliseconds(loginTimeOutMs), 1)).TrimEnd().EndsWith(terminator);
+      return await IsTerminatedWith(loginTimeOutMs, new Regex(terminator));
+    }
+
+    private async Task<bool> IsTerminatedWith(int loginTimeOutMs, Regex terminatorRegex)
+    {
+        return terminatorRegex.IsMatch(
+            (await this.TerminatedReadAsync(terminatorRegex, TimeSpan.FromMilliseconds(loginTimeOutMs), 1)).TrimEnd());
     }
   }
 }

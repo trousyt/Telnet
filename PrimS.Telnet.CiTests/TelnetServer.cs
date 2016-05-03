@@ -11,10 +11,13 @@
   public class TelnetServer : System.Net.Sockets.Socket
   {
     private readonly System.Threading.Thread t;
+    private readonly string bashChar;
 
-    public TelnetServer()
+    public TelnetServer() : this(">") { }
+    public TelnetServer(string bashChar)
       : base(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
     {
+      this.bashChar = bashChar;
       this.IsListening = true;
 
       IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
@@ -72,7 +75,7 @@
           this.WaitFor(handler, "password\n");
 
           Console.WriteLine("Password entered, respond with Command> prompt");
-          handler.Send(Encoding.ASCII.GetBytes("Command >"));
+          handler.Send(Encoding.ASCII.GetBytes("Command " + bashChar));
 
           this.WaitFor(handler, "show statistic wan2\n");
 
